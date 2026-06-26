@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Manager</title>
+    <style>
+        :root { --primary: #6366f1; --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 20px; }
+        
+        .container { max-width: 800px; margin: auto; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
+        button { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        
+        #profilesGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+        .profile-card { background: white; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <h2>Add New Profile</h2>
+            <form id="profileForm">
+                <input type="text" id="name" placeholder="Full Name" required>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="date" id="dob" required>
+                <input type="file" id="image" accept="image/*">
+                <button type="submit">Add to Collection</button>
+            </form>
+        </div>
+
+        <div id="profilesGrid"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('profileForm');
+        const grid = document.getElementById('profilesGrid');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const dob = document.getElementById('dob').value;
+            const imageFile = document.getElementById('image').files[0];
+
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) { createCard(name, email, dob, e.target.result); }
+                reader.readAsDataURL(imageFile);
+            } else {
+                createCard(name, email, dob, null);
+            }
+            form.reset();
+        });
+
+        function createCard(name, email, dob, imgSrc) {
+            const card = document.createElement('div');
+            card.className = 'profile-card';
+            
+            const avatarContent = imgSrc ? `<img src="${imgSrc}" class="avatar">` : `<div class="avatar">${name.charAt(0).toUpperCase()}</div>`;
+
+            card.innerHTML = `
+                ${avatarContent}
+                <h3>${name}</h3>
+                <p style="font-size: 0.9rem; color: #64748b;">${email}</p>
+                <p style="font-size: 0.8rem;">Born: ${dob}</p>
+            `;
+            grid.appendChild(card);
+        }
+    </script>
+</body>
+</html>
