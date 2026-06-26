@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Profiler</title>
+    <style>
+        :root { --primary: #6366f1; --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--bg-gradient); margin: 0; }
+        
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+        
+        /* Hidden profile area */
+        #profileDisplay { display: none; }
+        .avatar { width: 80px; height: 80px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="formCard">
+        <h2 id="title">Build Your Profile</h2>
+        <form id="profileForm">
+            <input type="text" id="nameInput" placeholder="Full Name" required>
+            <input type="email" id="emailInput" placeholder="Email" required>
+            <input type="date" id="dobInput" required>
+            <button type="submit">Create Profile</button>
+        </form>
+    </div>
+
+    <div class="card" id="profileDisplay">
+        <div class="avatar" id="avatarInitials">JD</div>
+        <h2 id="displayName"></h2>
+        <p><strong>Email:</strong> <span id="displayEmail"></span></p>
+        <p><strong>Date of Birth:</strong> <span id="displayDob"></span></p>
+        <button onclick="location.reload()" style="background: #64748b;">Edit Details</button>
+    </div>
+
+    <script>
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Get values
+            const name = document.getElementById('nameInput').value;
+            const email = document.getElementById('emailInput').value;
+            const dob = document.getElementById('dobInput').value;
+
+            // Set values in profile display
+            document.getElementById('displayName').innerText = name;
+            document.getElementById('displayEmail').innerText = email;
+            document.getElementById('displayDob').innerText = dob;
+            document.getElementById('avatarInitials').innerText = name.charAt(0).toUpperCase();
+
+            // Switch view
+            document.getElementById('formCard').style.display = 'none';
+            document.getElementById('profileDisplay').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
