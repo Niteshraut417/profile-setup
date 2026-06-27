@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pro Profile Manager</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --bg: #0f172a;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding: 40px 20px; margin: 0;
+        }
+
+        .page { 
+            background: var(--card); padding: 40px; border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+            width: 100%; max-width: 500px;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            position: absolute;
+        }
+
+        .hidden { 
+            opacity: 0; 
+            transform: translateY(30px);
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        h2 { color: var(--text); margin-bottom: 20px; text-align: center; }
+        
+        input, textarea { 
+            width: 100%; padding: 15px; margin: 12px 0; border: 2px solid #e2e8f0; 
+            border-radius: 12px; box-sizing: border-box; outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus { border-color: var(--primary); }
+
+        button { 
+            width: 100%; padding: 15px; background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white; border: none; border-radius: 12px; cursor: pointer;
+            font-weight: 600; font-size: 1rem; transition: transform 0.2s, filter 0.3s;
+        }
+        button:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        .profile-card { 
+            border: 1px solid #f1f5f9; padding: 20px; border-radius: 20px; 
+            margin-top: 20px; background: #f8fafc; text-align: center;
+        }
+        .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid white; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="authSection" class="page">
+        <h2>Welcome Back</h2>
+        <input type="email" placeholder="Email Address">
+        <input type="password" placeholder="Password">
+        <button onclick="goToPage('dashboard')">Sign In</button>
+    </div>
+
+    <div id="dashboard" class="page hidden">
+        <h2>My Collection</h2>
+        <input type="text" id="newName" placeholder="Enter full name">
+        <button onclick="addProfile()">Add New Profile</button>
+        <div id="profilesGrid"></div>
+        <br><button onclick="goToPage('authSection')" style="background:#64748b;">Logout</button>
+    </div>
+
+    <div id="detailView" class="page hidden">
+        <h2 id="viewName">Edit Profile</h2>
+        <input type="file" id="picInput" accept="image/*">
+        <textarea id="aboutMe" rows="4" placeholder="Professional summary..."></textarea>
+        <button onclick="saveAndReturn()">Save Changes</button>
+        <button onclick="goToPage('dashboard')" style="background:#94a3b8; margin-top:10px;">Cancel</button>
+    </div>
+
+    <script>
+        let currentProfileIndex = null;
+        let profiles = [];
+
+        function goToPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            setTimeout(() => { document.getElementById(pageId).classList.remove('hidden'); }, 100);
+        }
+
+        function addProfile() {
+            const name = document.getElementById('newName').value;
+            if(!name) return;
+            profiles.push({ name: name, about: "", img: "" });
+            renderProfiles();
+            document.getElementById('newName').value = '';
+        }
+
+        function renderProfiles() {
+            const grid = document.getElementById('profilesGrid');
+            grid.innerHTML = '';
+            profiles.forEach((p, i) => {
+                grid.innerHTML += `
+                    <div class="profile-card">
+                        ${p.img ? `<img src="${p.img}" class="avatar">` : ''}
+                        <h3>${p.name}</h3>
+                        <p style="font-size: 0.85rem; color: #64748b;">${p.about || "No summary yet."}</p>
+                        <button onclick="editProfile(${i})" style="padding: 8px;">Edit Details</button>
+                    </div>
+                `;
+            });
+        }
+
+        function editProfile(i) {
+            currentProfileIndex = i;
+            document.getElementById('viewName').innerText = "Edit " + profiles[i].name;
+            document.getElementById('aboutMe').value = profiles[i].about;
+            goToPage('detailView');
+        }
+
+        function saveAndReturn() {
+            const file = document.getElementById('picInput').files[0];
+            profiles[currentProfileIndex].about = document.getElementById('aboutMe').value;
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profiles[currentProfileIndex].img = e.target.result;
+                    renderProfiles();
+                    goToPage('dashboard');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                renderProfiles();
+                goToPage('dashboard');
+            }
+        }
+    </script>
+</body>
+</html>
