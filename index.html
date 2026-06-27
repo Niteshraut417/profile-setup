@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Personal Profiler</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #6366f1; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+        .hidden { display: none; }
+        .profile-card { border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-top: 15px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div id="authSection" class="card">
+        <h2 id="authTitle">Sign Up</h2>
+        <input type="text" id="regName" placeholder="Full Name">
+        <input type="email" id="regEmail" placeholder="Email">
+        <input type="password" id="regPass" placeholder="Password">
+        <button id="authBtn" onclick="handleAuth()">Sign Up</button>
+        <p style="text-align: center; cursor: pointer; font-size: 0.9rem;" onclick="toggleMode()">
+            Already have an account? <span style="color:#6366f1;">Login</span>
+        </p>
+    </div>
+
+    <div id="appSection" class="card hidden" style="max-width: 800px;">
+        <h2>My Profiles</h2>
+        <input type="text" id="newName" placeholder="Enter name for new profile">
+        <button onclick="addProfile()">Add Profile to Collection</button>
+        <div id="profilesGrid"></div>
+        <button onclick="location.reload()" style="background:#64748b;">Logout</button>
+    </div>
+
+    <script>
+        let isLogin = false;
+        let registeredUser = null;
+
+        function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById('authTitle').innerText = isLogin ? "Login" : "Sign Up";
+            document.getElementById('authBtn').innerText = isLogin ? "Login" : "Sign Up";
+        }
+
+        function handleAuth() {
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPass').value;
+
+            if (!isLogin) {
+                registeredUser = { email, pass };
+                alert("Account created! Now login.");
+                toggleMode();
+            } else {
+                if (registeredUser && email === registeredUser.email && pass === registeredUser.pass) {
+                    document.getElementById('authSection').classList.add('hidden');
+                    document.getElementById('appSection').classList.remove('hidden');
+                } else {
+                    alert("Invalid credentials.");
+                }
+            }
+        }
+
+        function addProfile() {
+            const name = document.getElementById('newName').value;
+            if(!name) return;
+            const grid = document.getElementById('profilesGrid');
+            grid.innerHTML += `
+                <div class="profile-card">
+                    <h3>${name}</h3>
+                    <button onclick="this.parentElement.remove()" style="background:#ef4444; width:auto; padding:5px 15px;">Delete</button>
+                </div>
+            `;
+            document.getElementById('newName').value = '';
+        }
+    </script>
+</body>
+</html>
