@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Professional Profile Manager</title>
+   <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 20px; display: flex; justify-content: center; }
+    
+    .page { 
+        background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        width: 100%; max-width: 600px;
+        /* The magic for transitions */
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        opacity: 1;
+        transform: translateY(0);
+        position: absolute; /* Stack pages on top of each other */
+    }
+
+    /* This class hides the element while keeping it in the DOM */
+    .hidden { 
+        opacity: 0; 
+        transform: translateY(20px);
+        pointer-events: none; /* Prevents clicking buttons on hidden pages */
+        visibility: hidden;
+    }
+</style>
+</head>
+<body>
+
+    <div id="authSection" class="page">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pass" placeholder="Password">
+        <button onclick="goToPage('dashboard')">Login</button>
+    </div>
+
+    <div id="dashboard" class="page hidden">
+        <h2>My Profiles</h2>
+        <input type="text" id="newName" placeholder="Name for new profile">
+        <button onclick="addProfile()">Add Profile</button>
+        <div id="profilesGrid"></div>
+        <br><button onclick="goToPage('authSection')" style="background:#94a3b8;">Logout</button>
+    </div>
+
+    <div id="detailView" class="page hidden">
+        <h2 id="viewName"></h2>
+        <input type="file" id="picInput" accept="image/*">
+        <textarea id="aboutMe" rows="5" placeholder="Write about yourself..."></textarea>
+        <button onclick="saveAndReturn()">Save & Return</button>
+        <button onclick="goToPage('dashboard')" style="background:#64748b;">Cancel</button>
+    </div>
+
+    <script>
+        let currentProfileIndex = null;
+        let profiles = [];
+
+        function goToPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(p => p.classList.add('hidden'));
+            
+            const target = document.getElementById(pageId);
+            target.classList.remove('hidden');
+            // Force a reflow for transition
+            target.style.opacity = '1';
+        }
+
+        function addProfile() {
+            const name = document.getElementById('newName').value;
+            if(!name) return;
+            profiles.push({ name: name, about: "", img: "" });
+            renderProfiles();
+            document.getElementById('newName').value = '';
+        }
+
+        function renderProfiles() {
+            const grid = document.getElementById('profilesGrid');
+            grid.innerHTML = '';
+            profiles.forEach((p, i) => {
+                grid.innerHTML += `
+                    <div style="border:1px solid #ddd; padding:15px; margin-top:10px; border-radius:10px;">
+                        ${p.img ? `<img src="${p.img}" class="avatar">` : ''}
+                        <h3>${p.name}</h3>
+                        <p>${p.about || "No summary yet."}</p>
+                        <button onclick="editProfile(${i})">Edit</button>
+                    </div>
+                `;
+            });
+        }
+
+        function editProfile(i) {
+            currentProfileIndex = i;
+            document.getElementById('viewName').innerText = profiles[i].name;
+            document.getElementById('aboutMe').value = profiles[i].about;
+            goToPage('detailView');
+        }
+
+        function saveAndReturn() {
+            const file = document.getElementById('picInput').files[0];
+            profiles[currentProfileIndex].about = document.getElementById('aboutMe').value;
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profiles[currentProfileIndex].img = e.target.result;
+                    renderProfiles();
+                    goToPage('dashboard');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                renderProfiles();
+                goToPage('dashboard');
+            }
+        }
+    </script>
+</body>
+</html>
