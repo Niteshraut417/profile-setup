@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile Manager Pro</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 20px; display: flex; justify-content: center; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
+        button { padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .hidden { display: none; }
+        .profile-card { border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-top: 10px; cursor: pointer; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <div id="authSection" class="card">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pass" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="dashboard" class="card hidden">
+        <h2>My Profiles</h2>
+        <input type="text" id="newName" placeholder="Name for new profile">
+        <button onclick="addProfile()">Add Profile</button>
+        <div id="profilesGrid"></div>
+    </div>
+
+    <div id="detailView" class="card hidden">
+        <button onclick="backToDashboard()">← Back</button>
+        <h2 id="viewName"></h2>
+        <p><strong>About Me:</strong></p>
+        <textarea id="aboutMe" rows="5" placeholder="Write something about this profile..."></textarea>
+        <button onclick="saveAbout()">Save Changes</button>
+    </div>
+
+    <script>
+        let currentProfileIndex = null;
+        let profiles = [];
+
+        function login() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+
+        function addProfile() {
+            const name = document.getElementById('newName').value;
+            if(!name) return;
+            profiles.push({ name: name, about: "" });
+            renderProfiles();
+            document.getElementById('newName').value = '';
+        }
+
+        function renderProfiles() {
+            const grid = document.getElementById('profilesGrid');
+            grid.innerHTML = '';
+            profiles.forEach((p, i) => {
+                grid.innerHTML += `
+                    <div class="profile-card" onclick="viewProfile(${i})">
+                        <span>${p.name}</span>
+                        <button onclick="event.stopPropagation(); profiles.splice(${i},1); renderProfiles();" style="background:#ef4444;">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        function viewProfile(i) {
+            currentProfileIndex = i;
+            document.getElementById('viewName').innerText = profiles[i].name;
+            document.getElementById('aboutMe').value = profiles[i].about;
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('detailView').classList.remove('hidden');
+        }
+
+        function saveAbout() {
+            profiles[currentProfileIndex].about = document.getElementById('aboutMe').value;
+            alert("Saved!");
+        }
+
+        function backToDashboard() {
+            document.getElementById('detailView').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
