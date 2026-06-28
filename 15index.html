@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ultimate Profile Manager</title>
+    <style>
+        :root { --primary: #6366f1; --accent: #8b5cf6; --bg: #0f172a; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 40px 20px; display: flex; justify-content: center; }
+        .page { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 25px rgba(0,0,0,0.3); width: 100%; max-width: 600px; transition: opacity 0.4s ease; position: absolute; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; }
+        button { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .gallery-img { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; }
+        .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div id="authSection" class="page">
+        <h2>Secure Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pass" placeholder="Password">
+        <button onclick="login()">Access Dashboard</button>
+    </div>
+
+    <div id="dashboard" class="page hidden">
+        <h2>My Profiles</h2>
+        <input type="text" id="newName" placeholder="New Profile Name">
+        <button onclick="addProfile()">Create Profile</button>
+        <div id="profilesGrid"></div>
+        <hr style="margin:20px 0;">
+        <button onclick="resetData()" style="background:#ef4444;">Reset All Data</button>
+        <button onclick="location.reload()" style="background:#64748b;">Logout</button>
+    </div>
+
+    <div id="detailView" class="page hidden">
+        <h2 id="viewName"></h2>
+        <label>Change Avatar:</label>
+        <input type="file" id="mainPic" accept="image/*">
+        <label>Add Gallery Photos:</label>
+        <input type="file" id="galleryInput" multiple accept="image/*">
+        <textarea id="aboutMe" rows="3" placeholder="Bio..."></textarea>
+        <button onclick="saveAndReturn()">Save & Sync</button>
+        <button onclick="goToPage('dashboard')" style="background:#94a3b8;">Back</button>
+    </div>
+
+    <script>
+        let currentProfileIndex = null;
+        let profiles = JSON.parse(localStorage.getItem('myProfiles')) || [];
+
+        function goToPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function login() { goToPage('dashboard'); renderProfiles(); }
+
+        function addProfile() {
+            const name = document.getElementById('newName').value;
+            if(!name) return;
+            profiles.push({ name, about: "", mainPic: "", gallery: [] });
+            saveAndRefresh();
+        }
+
+        function renderProfiles() {
+            const grid = document.getElementById('profilesGrid');
+            grid.innerHTML = '';
+            profiles.forEach((p, i) => {
+                grid.innerHTML += `
+                    <div style="border:1px solid #ddd; padding:20px; margin-top:15px; border-radius:16px;">
+                        ${p.mainPic ? `<img src="${p.mainPic}" class="avatar">` : ''}
+                        <h3>${p.name}</h3>
+                        <div class="gallery-grid">${p.gallery.map(img => `<img src="${img}" class="gallery-img">`).join('')}</div>
+                        <p>${p.about || "No bio yet."}</p>
+                        <button onclick="editProfile(${i})">Manage Profile</button>
+                    </div>
+                `;
+            });
+        }
+
+        function editProfile(i) {
+            currentProfileIndex = i;
+            document.getElementById('viewName').innerText = profiles[i].name;
+            goToPage('detailView');
+        }
+
+        async function saveAndReturn() {
+            const mainFile = document.getElementById('mainPic').files[0];
+            const galleryFiles = document.getElementById('galleryInput').files;
+            
+            if (mainFile) profiles[currentProfileIndex].mainPic = await toBase64(mainFile);
+            for (let file of galleryFiles) {
+                profiles[currentProfileIndex].gallery.push(await toBase64(file));
+            }
+            profiles[currentProfileIndex].about = document.getElementById('aboutMe').value;
+            saveAndRefresh();
+            goToPage('dashboard');
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('myProfiles', JSON.stringify(profiles));
+            renderProfiles();
+            document.getElementById('newName').value = '';
+        }
+
+        function resetData() {
+            if(confirm("Delete everything?")) {
+                localStorage.removeItem('myProfiles');
+                location.reload();
+            }
+        }
+
+        const toBase64 = file => new Promise(res => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => res(reader.result);
+        });
+    </script>
+</body>
+</html>
