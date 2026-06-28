@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pro Profile Manager</title>
+    <style>
+        :root { --primary: #6366f1; --bg: #0f172a; --card: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 40px 20px; display: flex; justify-content: center; color: #334155; }
+        .page { background: var(--card); padding: 40px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 100%; max-width: 600px; transition: opacity 0.4s ease; position: absolute; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; }
+        button { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        button:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .gallery-img { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; }
+        .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-bottom: 10px; }
+        .profile-card { border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; margin-top: 20px; background: #f8fafc; }
+    </style>
+</head>
+<body>
+
+    <!-- Login -->
+    <div id="authSection" class="page">
+        <h2>Secure Login</h2>
+        <input type="email" placeholder="Email">
+        <input type="password" placeholder="Password">
+        <button onclick="goToPage('dashboard')">Enter Dashboard</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="page hidden">
+        <h2>My Profiles</h2>
+        <input type="text" id="newName" placeholder="Profile Name">
+        <button onclick="addProfile()">Create Profile</button>
+        <div id="profilesGrid"></div>
+        <hr style="margin:20px 0;">
+        <button onclick="resetAll()" style="background:#ef4444;">Reset All Data</button>
+        <button onclick="location.reload()" style="background:#64748b;">Logout</button>
+    </div>
+
+    <!-- Edit View -->
+    <div id="detailView" class="page hidden">
+        <h2 id="viewName">Edit Profile</h2>
+        <label>Main Avatar:</label>
+        <input type="file" id="mainPic" accept="image/*">
+        <label>Add Gallery Photos (Multiple):</label>
+        <input type="file" id="galleryInput" multiple accept="image/*">
+        <textarea id="aboutMe" rows="3" placeholder="Bio..."></textarea>
+        <div style="display:flex; gap:10px;">
+            <button onclick="saveAndReturn()">Save Changes</button>
+            <button onclick="clearGallery()" style="background:#f59e0b;">Clear Gallery</button>
+            <button onclick="goToPage('dashboard')" style="background:#94a3b8;">Back</button>
+        </div>
+    </div>
+
+    <script>
+        let currentProfileIndex = null;
+        let profiles = JSON.parse(localStorage.getItem('myProfiles')) || [];
+
+        function goToPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function addProfile() {
+            const name = document.getElementById('newName').value;
+            if(!name) return;
+            profiles.push({ name, about: "", mainPic: "", gallery: [] });
+            saveAndRefresh();
+            document.getElementById('newName').value = '';
+        }
+
+        function renderProfiles() {
+            const grid = document.getElementById('profilesGrid');
+            grid.innerHTML = '';
+            profiles.forEach((p, i) => {
+                grid.innerHTML += `
+                    <div class="profile-card">
+                        ${p.mainPic ? `<img src="${p.mainPic}" class="avatar">` : ''}
+                        <h3>${p.name}</h3>
+                        <div class="gallery-grid">${p.gallery.map(img => `<img src="${img}" class="gallery-img">`).join('')}</div>
+                        <p>${p.about || "No bio yet."}</p>
+                        <button onclick="editProfile(${i})">Manage</button>
+                        <button onclick="deleteProfile(${i})" style="background:#ef4444;">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        function editProfile(i) {
+            currentProfileIndex = i;
+            document.getElementById('viewName').innerText = "Edit " + profiles[i].name;
+            document.getElementById('aboutMe').value = profiles[i].about;
+            goToPage('detailView');
+        }
+
+        function deleteProfile(i) {
+            if(confirm("Delete this profile?")) {
+                profiles.splice(i, 1);
+                saveAndRefresh();
+            }
+        }
+
+        function clearGallery() {
+            profiles[currentProfileIndex].gallery = [];
+            alert("Gallery cleared.");
+        }
+
+        async function saveAndReturn() {
+            const mainFile = document.getElementById('mainPic').files[0];
+            const galleryFiles = document.getElementById('galleryInput').files;
+            
+            if (mainFile) profiles[currentProfileIndex].mainPic = await toBase64(mainFile);
+            for (let file of galleryFiles) {
+                profiles[currentProfileIndex].gallery.push(await toBase64(file));
+            }
+            profiles[currentProfileIndex].about = document.getElementById('aboutMe').value;
+            saveAndRefresh();
+            goToPage('dashboard');
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('myProfiles', JSON.stringify(profiles));
+            renderProfiles();
+        }
+
+        function resetAll() {
+            if(confirm("Wipe everything?")) {
+                localStorage.removeItem('myProfiles');
+                location.reload();
+            }
+        }
+
+        const toBase64 = file => new Promise(res => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => res(reader.result);
+        });
+
+        renderProfiles();
+    </script>
+</body>
+</html>
